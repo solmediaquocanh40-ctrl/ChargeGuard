@@ -1,0 +1,37 @@
+#!/bin/sh
+# Tạo và nạp LaunchDaemon cho chargeguardd, đường dẫn tự dò theo rootful/rootless/roothide.
+BIN=""
+for c in /var/jb/usr/libexec/chargeguardd /usr/libexec/chargeguardd; do
+    if [ -x "$c" ]; then BIN="$c"; break; fi
+done
+if [ -z "$BIN" ] && command -v jbroot >/dev/null 2>&1; then
+    c="$(jbroot /usr/libexec/chargeguardd)"
+    [ -x "$c" ] && BIN="$c"
+fi
+if [ -z "$BIN" ]; then
+    echo "ChargeGuard: không tìm thấy chargeguardd, bỏ qua LaunchDaemon" >&2
+    exit 0
+fi
+PREFIX="${BIN%/usr/libexec/chargeguardd}"
+DIR="$PREFIX/Library/LaunchDaemons"
+PLIST="$DIR/com.chargeguard.daemon.plist"
+mkdir -p "$DIR"
+cat > "$PLIST" <<PL
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key><string>com.chargeguard.daemon</string>
+	<key>ProgramArguments</key>
+	<array><string>$BIN</string></array>
+	<key>RunAtLoad</key><true/>
+	<key>KeepAlive</key><true/>
+	<key>UserName</key><string>root</string>
+</dict>
+</plist>
+PL
+chown root:wheel "$PLIST" 2>/dev/null
+chmod 644 "$PLIST"
+launchctl unload "$PLIST" 2>/dev/null
+launchctl load -w "$PLIST" 2>/dev/null || launchctl bootstrap system "$PLIST" 2>/dev/null
+exit 0

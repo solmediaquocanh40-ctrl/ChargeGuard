@@ -1,0 +1,12 @@
+#!/bin/sh
+# Dừng daemon (SIGTERM làm daemon mở lại sạc) và gỡ LaunchDaemon.
+for d in /var/jb/Library/LaunchDaemons /Library/LaunchDaemons; do
+    P="$d/com.chargeguard.daemon.plist"
+    if [ -f "$P" ]; then launchctl unload "$P" 2>/dev/null; rm -f "$P"; fi
+done
+if command -v jbroot >/dev/null 2>&1; then
+    P="$(jbroot /Library/LaunchDaemons)/com.chargeguard.daemon.plist"
+    if [ -f "$P" ]; then launchctl unload "$P" 2>/dev/null; rm -f "$P"; fi
+fi
+killall chargeguardd 2>/dev/null
+exit 0

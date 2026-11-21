@@ -1,0 +1,9 @@
+Package: com.chargeguard.tweak
+Name: ChargeGuard
+Version: 0.2.0
+Architecture: iphoneos-arm
+Description: Giới hạn mức sạc pin, sạc xung, chế độ lưu kho, tiết kiệm pin khi tắt màn hình và app xem trạng thái/sức khoẻ pin. Hỗ trợ iOS 14–18.
+Maintainer: user
+Author: user
+Section: Tweaks
+Depends: mobilesubstrate, preferenceloader, firmware (>= 14.0), firmware (<< 19.0)
