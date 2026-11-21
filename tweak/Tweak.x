@@ -601,7 +601,7 @@ static void PeriodicTick(void) {
         dispatch_source_set_timer(tick, dispatch_time(DISPATCH_TIME_NOW, 20 * NSEC_PER_SEC), 30 * NSEC_PER_SEC, 5 * NSEC_PER_SEC);
         dispatch_source_set_event_handler(tick, ^{ @autoreleasepool { PeriodicTick(); } });
         dispatch_resume(tick);
-        // giữ tham chiếu
-        static dispatch_source_t keep; keep = tick;
+        // giữ tham chiếu cho timer sống suốt (gán vào biến static)
+        static dispatch_source_t keep; keep = tick; (void)keep;
     }
 }
