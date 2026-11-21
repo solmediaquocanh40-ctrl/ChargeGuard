@@ -1,10 +1,8 @@
 #import "CGSliderNumbers.h"
-#import <UIKit/UIKit.h>
 #import <objc/runtime.h>
 #import <objc/message.h>
 
 static char kCGValueLabelKey;
-static IMP gOrigLayoutSubviews = NULL;
 
 // Tìm thanh trượt trong cây view của ô (hàm đệ quy thường, không dùng block tự gọi).
 static UISlider *CGFindSlider(UIView *v) {
@@ -16,23 +14,19 @@ static UISlider *CGFindSlider(UIView *v) {
     return nil;
 }
 
-// Đọc một property của specifier bằng runtime, không cần header của Preferences.
-static id CGSpecProperty(id spec, NSString *key) {
-    if (spec && [spec respondsToSelector:@selector(propertyForKey:)]) {
-        return ((id (*)(id, SEL, id))objc_msgSend)(spec, @selector(propertyForKey:), key);
-    }
-    return nil;
+static UILabel *CGLabelForCell(UITableViewCell *cell) {
+    return objc_getAssociatedObject(cell, &kCGValueLabelKey);
 }
 
-static void CGRefreshLabel(UITableViewCell *cell, UISlider *slider) {
-    UILabel *label = objc_getAssociatedObject(cell, &kCGValueLabelKey);
-    if (!label || !slider) return;
+// Đọc CGUnit của specifier gắn với ô, hoàn toàn bằng runtime (không cần header Preferences).
+static NSString *CGUnitForCell(UITableViewCell *cell) {
     id spec = nil;
     if ([cell respondsToSelector:@selector(specifier)])
         spec = ((id (*)(id, SEL))objc_msgSend)(cell, @selector(specifier));
-    id unit = CGSpecProperty(spec, @"CGUnit");
-    if (![unit isKindOfClass:[NSString class]]) unit = @"";
-    label.text = [NSString stringWithFormat:@"%d%@", (int)lroundf(slider.value), unit];
+    id unit = nil;
+    if (spec && [spec respondsToSelector:@selector(propertyForKey:)])
+        unit = ((id (*)(id, SEL, id))objc_msgSend)(spec, @selector(propertyForKey:), @"CGUnit");
+    return [unit isKindOfClass:[NSString class]] ? unit : nil;
 }
 
 @interface CGSliderNumHandler : NSObject
@@ -50,56 +44,45 @@ static void CGRefreshLabel(UITableViewCell *cell, UISlider *slider) {
 - (void)cgMoved:(UISlider *)slider {
     UIView *v = slider;
     while (v && ![v isKindOfClass:[UITableViewCell class]]) v = v.superview;
-    if (v) CGRefreshLabel((UITableViewCell *)v, slider);
+    if (v) {
+        UITableViewCell *cell = (UITableViewCell *)v;
+        CGLayoutSliderNumber(cell, CGUnitForCell(cell));
+    }
 }
 @end
 
-static void CGSliderLayoutSubviews(id self, SEL _cmd) {
-    ((void (*)(id, SEL))gOrigLayoutSubviews)(self, _cmd);
-    UITableViewCell *cell = (UITableViewCell *)self;
-    id spec = nil;
-    if ([cell respondsToSelector:@selector(specifier)])
-        spec = ((id (*)(id, SEL))objc_msgSend)(cell, @selector(specifier));
-    // Chỉ đụng vào thanh trượt của ChargeGuard: specifier của mình có khoá CGUnit,
-    // thanh trượt hệ thống ở nơi khác trong Cài đặt không có khoá này nên để yên.
-    if (!CGSpecProperty(spec, @"CGUnit")) return;
+BOOL CGCellHasSlider(UITableViewCell *cell) {
+    return CGFindSlider(cell.contentView) != nil;
+}
+
+void CGAttachSliderNumber(UITableViewCell *cell) {
+    if (CGLabelForCell(cell)) return;
     UISlider *slider = CGFindSlider(cell.contentView);
     if (!slider || !slider.superview) return;
+    UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
+    label.font = [UIFont systemFontOfSize:15 weight:UIFontWeightMedium];
+    label.textColor = [UIColor secondaryLabelColor];
+    label.textAlignment = NSTextAlignmentRight;
+    [slider.superview addSubview:label];
+    objc_setAssociatedObject(cell, &kCGValueLabelKey, label, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    [slider addTarget:[CGSliderNumHandler shared] action:@selector(cgMoved:) forControlEvents:UIControlEventValueChanged];
+}
 
-    UILabel *label = objc_getAssociatedObject(cell, &kCGValueLabelKey);
-    if (!label) {
-        label = [[UILabel alloc] initWithFrame:CGRectZero];
-        label.font = [UIFont systemFontOfSize:15 weight:UIFontWeightMedium];
-        label.textColor = [UIColor secondaryLabelColor];
-        label.textAlignment = NSTextAlignmentRight;
-        [slider.superview addSubview:label];
-        objc_setAssociatedObject(cell, &kCGValueLabelKey, label, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        [slider addTarget:[CGSliderNumHandler shared] action:@selector(cgMoved:) forControlEvents:UIControlEventValueChanged];
-    }
+void CGLayoutSliderNumber(UITableViewCell *cell, NSString *unit) {
+    UILabel *label = CGLabelForCell(cell);
+    if (!label) return;
+    if (!unit) { label.hidden = YES; return; }
+    UISlider *slider = CGFindSlider(cell.contentView);
+    if (!slider || !slider.superview) { label.hidden = YES; return; }
+    label.hidden = NO;
+    UIView *host = slider.superview;
     CGFloat labelW = 58;
-    CGRect hb = slider.superview.bounds;
-    label.frame = CGRectMake(CGRectGetMaxX(hb) - labelW - 10, 0, labelW, CGRectGetHeight(hb));
+    label.frame = CGRectMake(CGRectGetMaxX(host.bounds) - labelW - 10, 0, labelW, CGRectGetHeight(host.bounds));
     CGRect f = slider.frame;
     CGFloat maxW = CGRectGetMinX(label.frame) - CGRectGetMinX(f) - 8;
     if (maxW > 60 && f.size.width > maxW) {
         f.size.width = maxW;
         slider.frame = f;
     }
-    CGRefreshLabel(cell, slider);
-}
-
-void CGInstallSliderNumbers(void) {
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        Class c = objc_getClass("PSSliderCell");
-        if (!c) return; // không thấy class: giữ thanh trượt gốc, không làm gì cả
-        Method m = class_getInstanceMethod(c, @selector(layoutSubviews));
-        if (!m) return;
-        gOrigLayoutSubviews = method_getImplementation(m);
-        // Nếu PSSliderCell chỉ thừa kế layoutSubviews từ class cha thì THÊM bản
-        // ghi đè riêng cho nó (không đụng class cha); có sẵn của riêng nó mới thay.
-        if (!class_addMethod(c, @selector(layoutSubviews), (IMP)CGSliderLayoutSubviews, "v@:")) {
-            method_setImplementation(m, (IMP)CGSliderLayoutSubviews);
-        }
-    });
+    label.text = [NSString stringWithFormat:@"%d%@", (int)lroundf(slider.value), unit];
 }

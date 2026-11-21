@@ -1169,7 +1169,7 @@
 			<key>footerText</key>
 			<string>Giới hạn sạc, sạc xung, lưu kho pin, làm mát khi sạc, tiết kiệm khi tắt màn hình. Log nằm ở Documents/ChargeGuard.log — gỡ tweak vẫn còn.</string>
 			<key>label</key>
-			<string>ChargeGuard 0.2.2</string>
+			<string>ChargeGuard 0.2.3</string>
 		</dict>
 	</array>
 	<key>title</key>

@@ -54,7 +54,11 @@ if [ -z "$UICACHE" ] && command -v uicache >/dev/null 2>&1; then UICACHE="uicach
 CGLOG=/var/mobile/Documents/ChargeGuard.log
 if [ -n "$APP" ] && [ -n "$UICACHE" ]; then
     echo "postinst: đăng ký app bằng $UICACHE cho $APP" >> "$CGLOG" 2>/dev/null
-    "$UICACHE" -p "$APP" >> "$CGLOG" 2>&1 || "$UICACHE" -a >> "$CGLOG" 2>&1 || true
+    "$UICACHE" -p "$APP" >> "$CGLOG" 2>&1
+    # 0.2.3: LUÔN dựng lại toàn bộ sổ đăng ký sau đó. Bản 0.2.2 chỉ chạy -a khi -p
+    # thất bại, mà trên máy thật -p báo "Unable to unregister" (đường preboot cũ)
+    # nhưng vẫn trả mã 0 nên -a không bao giờ chạy và app không hiện icon.
+    "$UICACHE" -a >> "$CGLOG" 2>&1 || true
 else
     echo "postinst: KHÔNG đăng ký được app (APP='$APP' UICACHE='$UICACHE')" >> "$CGLOG" 2>/dev/null
 fi

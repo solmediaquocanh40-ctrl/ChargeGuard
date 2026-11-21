@@ -1,4 +1,4 @@
-// chargeguardd 0.2.2 - daemon chạy bằng quyền root, đọc pin và ngắt/mở sạc theo giới hạn.
+// chargeguardd 0.2.3 - daemon chạy bằng quyền root, đọc pin và ngắt/mở sạc theo giới hạn.
 // Mặc định luôn là SẠC BÌNH THƯỜNG. Chỉ ngắt sạc khi đã kiểm chứng được một cách ngắt hoạt động.
 // 0.2.0: nhớ phương thức ngắt đã thắng, sạc xung, chế độ lưu kho, vệ sĩ nhiệt khẩn cấp,
 // cảnh báo cáp chập chờn, phát hiện pin bất thường, lịch sử sạc, log bền ở Documents.
@@ -479,7 +479,7 @@ int main(int argc, char **argv) {
         LoadState();
         if (gState[@"working"]) gWorking = [gState[@"working"] intValue];
         gAllFailed = [gState[@"allFailed"] boolValue];
-        CGLog(@"chargeguardd 0.2.2 khởi động (phương thức đã nhớ: %@)", gWorking >= 0 ? MethodName(gWorking) : @"chưa có");
+        CGLog(@"chargeguardd 0.2.3 khởi động (phương thức đã nhớ: %@)", gWorking >= 0 ? MethodName(gWorking) : @"chưa có");
         ReleaseAllMethods();              // luôn bắt đầu ở trạng thái sạc bình thường
         // Dọn khi bị tắt
         signal(SIGTERM, SIG_IGN);

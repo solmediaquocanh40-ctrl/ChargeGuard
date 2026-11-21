@@ -1,4 +1,4 @@
-// CGShared.h - hằng số dùng chung cho daemon, tweak, bảng Cài đặt và app (0.2.2)
+// CGShared.h - hằng số dùng chung cho daemon, tweak, bảng Cài đặt và app (0.2.3)
 #ifndef CGSHARED_H
 #define CGSHARED_H
 
@@ -28,7 +28,7 @@
 #define K_HYST           @"hysteresis"       // int, sạc lại khi thấp hơn giới hạn bấy nhiêu %
 #define K_TEMP_ON        @"tempOn"           // BOOL
 #define K_TEMP_MAX       @"tempMax"          // int, độ C
-#define K_TEMP_EMERG     @"tempEmerg"        // int, độ C: vệ sĩ nhiệt khẩn cấp (0.2.2)
+#define K_TEMP_EMERG     @"tempEmerg"        // int, độ C: vệ sĩ nhiệt khẩn cấp (0.2.3)
 #define K_FULL_ONCE      @"fullOnceStamp"    // double, mốc thời gian lúc bấm "Sạc đầy một lần"
 #define K_SCHED_ON       @"schedOn"          // BOOL
 #define K_SCHED_HOUR     @"schedHour"        // int 0-23, giờ cho sạc đầy
@@ -75,7 +75,7 @@
 #define K_SAVE_CHARGING  @"saveWhileCharging"// BOOL, vẫn tiết kiệm khi đang sạc
 #define K_PROFILE        @"profile"          // 0 tùy chỉnh, 1 nhẹ, 2 cân bằng, 3 mạnh
 #define K_S_CPU          @"sCPU"             // giảm CPU nền
-#define K_S_CPU_LEVEL    @"sCPULevel"        // int % CPU nền: app ngốn hơn mức này mới bị đóng băng (0.2.2)
+#define K_S_CPU_LEVEL    @"sCPULevel"        // int % CPU nền: app ngốn hơn mức này mới bị đóng băng (0.2.3)
 #define K_S_FREEZE       @"sFreeze"          // đóng băng app nền (0.2.0: chỉ app ngốn CPU nếu bật sCPU)
 #define K_S_BT           @"sBluetooth"
 #define K_S_LOC          @"sLocation"

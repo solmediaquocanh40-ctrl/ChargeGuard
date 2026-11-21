@@ -1,10 +1,11 @@
-// CGRootListController 0.2.2 — trang Cài đặt của ChargeGuard.
+// CGRootListController 0.2.3 — trang Cài đặt của ChargeGuard.
 // Giữ nguyên khung của bản cũ (trạng thái, hồ sơ, ngoại lệ, các nút công cụ)
 // và thêm: sạc cấp tốc, respring, đặt lại mặc định, xuất/nhập file cài đặt,
 // chẩn đoán đầy đủ (model máy, bản iOS, phương thức ngắt sạc) trong phần chép log.
 #import "CGRootListController.h"
 #import "CGSliderNumbers.h"
 #import <Preferences/PSSpecifier.h>
+#import <objc/message.h>
 #import <UIKit/UIKit.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import <notify.h>
@@ -23,10 +24,44 @@ extern char **environ;
 - (NSArray *)specifiers {
     if (!_specifiers) {
         _specifiers = [self loadSpecifiersFromPlistName:@"Root" target:self];
-        // 0.2.2: gắn nhãn số cho thanh trượt bằng móc runtime (xem CGSliderNumbers.m).
-        CGInstallSliderNumbers();
     }
     return _specifiers;
+}
+
+// ---------- 0.2.3: nhãn số cho thanh trượt, gắn ngay trong controller ----------
+// Đếm số ô đã xử lý và ghi vào kho cài đặt để phần chẩn đoán (copyLog) đọc lại:
+// nếu số vẫn không hiện thì nhìn số đếm là biết kẹt ở bước nào.
+static int gDiagAttach = 0, gDiagLayout = 0, gDiagNoSlider = 0;
+static void CGWriteSliderDiag(void) {
+    NSString *v = [NSString stringWithFormat:@"gắn %d ô, xếp %d ô, ô thiếu thanh trượt %d", gDiagAttach, gDiagLayout, gDiagNoSlider];
+    CFPreferencesSetAppValue(CFSTR("diagSlider"), (__bridge CFStringRef)v, (__bridge CFStringRef)CG_DOMAIN);
+    CFPreferencesAppSynchronize((__bridge CFStringRef)CG_DOMAIN);
+}
+static PSSpecifier *CGSpecForCell(UITableViewCell *cell) {
+    if ([cell respondsToSelector:@selector(specifier)])
+        return ((PSSpecifier * (*)(id, SEL))objc_msgSend)(cell, @selector(specifier));
+    return nil;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
+    PSSpecifier *spec = CGSpecForCell(cell);
+    if (spec && [spec propertyForKey:@"CGUnit"]) {
+        if (CGCellHasSlider(cell)) { CGAttachSliderNumber(cell); gDiagAttach++; }
+        else gDiagNoSlider++;
+        CGWriteSliderDiag();
+    }
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+    PSSpecifier *spec = CGSpecForCell(cell);
+    id unit = spec ? [spec propertyForKey:@"CGUnit"] : nil;
+    if ([unit isKindOfClass:[NSString class]]) {
+        CGLayoutSliderNumber(cell, unit);
+        gDiagLayout++;
+        CGWriteSliderDiag();
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -177,7 +212,7 @@ static NSArray *KnownKeys(void) {
     NSMutableDictionary *out = [NSMutableDictionary dictionary];
     for (NSString *k in KnownKeys()) if (cur[k]) out[k] = cur[k];
     out[@"_chargeguard"] = @"settings";
-    out[@"_version"] = @"0.2.2";
+    out[@"_version"] = @"0.2.3";
     NSError *err = nil;
     NSData *data = [NSJSONSerialization dataWithJSONObject:out options:NSJSONWritingPrettyPrinted error:&err];
     if (!data) { [self alert:@"Xuất cài đặt" message:@"Không tạo được file."]; return; }
@@ -226,11 +261,13 @@ static NSArray *KnownKeys(void) {
     if (log.length > 8000) log = [log substringFromIndex:log.length - 8000];
     struct utsname uts; uname(&uts);
     NSDictionary *s = [NSDictionary dictionaryWithContentsOfFile:CG_STATUS_PATH];
+    NSString *sliderDiag = (__bridge_transfer NSString *)CFPreferencesCopyAppValue(CFSTR("diagSlider"), (__bridge CFStringRef)CG_DOMAIN) ?: @"chưa có dữ liệu";
     NSString *diag = [NSString stringWithFormat:
-        @"Máy: %s • iOS %@ • ChargeGuard 0.2.2\nNgắt sạc: %@\n",
+        @"Máy: %s • iOS %@ • ChargeGuard 0.2.3\nNgắt sạc: %@\nNhãn số thanh trượt: %@\n",
         uts.machine, [UIDevice currentDevice].systemVersion,
         [s[S_SUPPORTED] intValue] == 1 ? [NSString stringWithFormat:@"hoạt động (%@)", s[S_METHOD]]
-        : [s[S_SUPPORTED] intValue] == 0 ? @"KHÔNG hỗ trợ" : @"chưa kiểm tra"];
+        : [s[S_SUPPORTED] intValue] == 0 ? @"KHÔNG hỗ trợ" : @"chưa kiểm tra",
+        sliderDiag];
     NSString *all = [NSString stringWithFormat:@"=== chẩn đoán ===\n%@=== status ===\n%@\n=== log ===\n%@", diag, s ?: @"(không có)", log];
     [UIPasteboard generalPasteboard].string = all;
     [self alert:@"Đã sao chép log" message:@"Dán nội dung đó cho mình để chỉnh tweak."];
