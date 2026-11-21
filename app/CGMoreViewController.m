@@ -156,8 +156,11 @@ static NSArray *CGKnownKeys(void) {
 }
 
 - (void)importSettings {
+    // Không dùng UTType.data dạng property: header SDK của Theos không khai báo
+    // (build 0.2.0 lần 2 chết đúng lỗi này) — tạo bằng identifier cho chắc.
     UTType *json = [UTType typeWithIdentifier:@"public.json"];
-    UIDocumentPickerViewController *picker = [[UIDocumentPickerViewController alloc] initForOpeningContentTypes:@[json ?: UTType.data] asCopy:YES];
+    UTType *anyData = [UTType typeWithIdentifier:@"public.data"];
+    UIDocumentPickerViewController *picker = [[UIDocumentPickerViewController alloc] initForOpeningContentTypes:@[json ?: anyData] asCopy:YES];
     picker.delegate = self;
     [self presentViewController:picker animated:YES completion:nil];
 }
