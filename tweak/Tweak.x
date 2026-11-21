@@ -14,8 +14,38 @@
 #include <signal.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
-#include <libproc.h>
 #include <unistd.h>
+
+// SDK iOS của Theos KHÔNG có sẵn <libproc.h> (build 0.2.0 đầu chết đúng lỗi này)
+// nên tự khai báo đúng phần libproc cần dùng. Struct đặt tên riêng CGProcTaskInfo
+// để tránh mọi nguy cơ trùng khai báo; nhân hệ thống chỉ quan tâm kích thước và
+// vị trí các trường đầu (virtual/resident/total_user/total_system), khớp bản gốc.
+#ifndef PROC_ALL_PIDS
+#define PROC_ALL_PIDS 1
+#endif
+#ifndef PROC_PIDTASKINFO
+#define PROC_PIDTASKINFO 4
+#endif
+struct CGProcTaskInfo {
+    uint64_t pti_virtual_size;
+    uint64_t pti_resident_size;
+    uint64_t pti_total_user;
+    uint64_t pti_total_system;
+    uint64_t pti_total_idle;
+    uint64_t pti_faults;
+    uint32_t pti_pageins;
+    uint32_t pti_cow_faults;
+    uint32_t pti_messages_sent;
+    uint32_t pti_messages_received;
+    uint32_t pti_syscalls_mach;
+    uint32_t pti_syscalls_unix;
+    uint32_t pti_csw;
+    uint32_t pti_threadnum;
+    uint32_t pti_numrunning;
+    int32_t  pti_priority;
+};
+int proc_listpids(uint32_t type, uint32_t typeinfo, void *buffer, int buffersize);
+int proc_pidinfo(int pid, int flavor, uint64_t arg, void *buffer, int buffersize);
 #import "../Shared/CGShared.h"
 
 #ifndef PRIO_DARWIN_PROCESS
@@ -138,7 +168,7 @@ static NSDictionary *SampleAppCPU(NSArray *apps, NSArray *except) {
     for (SBApplication *app in apps) {
         NSString *bid; int pid;
         if (!AppIsCandidate(app, except, &bid, &pid)) continue;
-        struct proc_taskinfo ti;
+        struct CGProcTaskInfo ti;
         if (proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &ti, sizeof(ti)) == (int)sizeof(ti)) {
             t0[@(pid)] = @(ti.pti_total_user + ti.pti_total_system);
             names[@(pid)] = bid;
@@ -153,7 +183,7 @@ static NSDictionary *SampleAppCPU(NSArray *apps, NSArray *except) {
         long cores = sysconf(_SC_NPROCESSORS_ONLN);
         if (cores < 1) cores = 1;
         for (NSNumber *pidN in t0) {
-            struct proc_taskinfo ti;
+            struct CGProcTaskInfo ti;
             if (proc_pidinfo(pidN.intValue, PROC_PIDTASKINFO, 0, &ti, sizeof(ti)) != (int)sizeof(ti)) continue;
             uint64_t delta = (ti.pti_total_user + ti.pti_total_system) - [t0[pidN] unsignedLongLongValue];
             double pct = wall > 0 ? ((double)delta / (wall * 1e9) * 100.0 / cores) : 0;
