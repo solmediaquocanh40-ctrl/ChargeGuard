@@ -50,7 +50,12 @@ for c in /var/jb/usr/bin/uicache /usr/bin/uicache; do
     if [ -x "$c" ]; then UICACHE="$c"; break; fi
 done
 if [ -z "$UICACHE" ] && command -v uicache >/dev/null 2>&1; then UICACHE="uicache"; fi
+# 0.2.2: ghi kết quả uicache vào log của tweak để lần sau chẩn đoán được từ xa
+CGLOG=/var/mobile/Documents/ChargeGuard.log
 if [ -n "$APP" ] && [ -n "$UICACHE" ]; then
-    "$UICACHE" -p "$APP" 2>/dev/null || "$UICACHE" -a 2>/dev/null || true
+    echo "postinst: đăng ký app bằng $UICACHE cho $APP" >> "$CGLOG" 2>/dev/null
+    "$UICACHE" -p "$APP" >> "$CGLOG" 2>&1 || "$UICACHE" -a >> "$CGLOG" 2>&1 || true
+else
+    echo "postinst: KHÔNG đăng ký được app (APP='$APP' UICACHE='$UICACHE')" >> "$CGLOG" 2>/dev/null
 fi
 exit 0

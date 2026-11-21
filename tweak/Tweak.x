@@ -652,7 +652,7 @@ static void PeriodicTick(void) {
 %ctor {
     @autoreleasepool {
         if (![[NSBundle mainBundle].bundleIdentifier isEqualToString:@"com.apple.springboard"]) return;
-        CGLog(@"tweak 0.2.1 nạp vào SpringBoard");
+        CGLog(@"tweak 0.2.2 nạp vào SpringBoard");
         RecoverFromCrash();
 
         int tok1, tok2;

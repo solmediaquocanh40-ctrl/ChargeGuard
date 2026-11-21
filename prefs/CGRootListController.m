@@ -1,8 +1,9 @@
-// CGRootListController 0.2.1 — trang Cài đặt của ChargeGuard.
+// CGRootListController 0.2.2 — trang Cài đặt của ChargeGuard.
 // Giữ nguyên khung của bản cũ (trạng thái, hồ sơ, ngoại lệ, các nút công cụ)
 // và thêm: sạc cấp tốc, respring, đặt lại mặc định, xuất/nhập file cài đặt,
 // chẩn đoán đầy đủ (model máy, bản iOS, phương thức ngắt sạc) trong phần chép log.
 #import "CGRootListController.h"
+#import "CGSliderNumbers.h"
 #import <Preferences/PSSpecifier.h>
 #import <UIKit/UIKit.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
@@ -22,13 +23,8 @@ extern char **environ;
 - (NSArray *)specifiers {
     if (!_specifiers) {
         _specifiers = [self loadSpecifiersFromPlistName:@"Root" target:self];
-        // 0.2.1: mọi thanh trượt dùng ô CGSliderCell để hiện số khi kéo
-        // (đặt cả trong Root.plist lẫn ở đây cho chắc chắn).
-        for (PSSpecifier *spec in _specifiers) {
-            if ([[spec propertyForKey:@"cell"] isEqualToString:@"PSSliderCell"]) {
-                [spec setProperty:@"CGSliderCell" forKey:@"cellClass"];
-            }
-        }
+        // 0.2.2: gắn nhãn số cho thanh trượt bằng móc runtime (xem CGSliderNumbers.m).
+        CGInstallSliderNumbers();
     }
     return _specifiers;
 }
@@ -181,7 +177,7 @@ static NSArray *KnownKeys(void) {
     NSMutableDictionary *out = [NSMutableDictionary dictionary];
     for (NSString *k in KnownKeys()) if (cur[k]) out[k] = cur[k];
     out[@"_chargeguard"] = @"settings";
-    out[@"_version"] = @"0.2.1";
+    out[@"_version"] = @"0.2.2";
     NSError *err = nil;
     NSData *data = [NSJSONSerialization dataWithJSONObject:out options:NSJSONWritingPrettyPrinted error:&err];
     if (!data) { [self alert:@"Xuất cài đặt" message:@"Không tạo được file."]; return; }
@@ -231,7 +227,7 @@ static NSArray *KnownKeys(void) {
     struct utsname uts; uname(&uts);
     NSDictionary *s = [NSDictionary dictionaryWithContentsOfFile:CG_STATUS_PATH];
     NSString *diag = [NSString stringWithFormat:
-        @"Máy: %s • iOS %@ • ChargeGuard 0.2.1\nNgắt sạc: %@\n",
+        @"Máy: %s • iOS %@ • ChargeGuard 0.2.2\nNgắt sạc: %@\n",
         uts.machine, [UIDevice currentDevice].systemVersion,
         [s[S_SUPPORTED] intValue] == 1 ? [NSString stringWithFormat:@"hoạt động (%@)", s[S_METHOD]]
         : [s[S_SUPPORTED] intValue] == 0 ? @"KHÔNG hỗ trợ" : @"chưa kiểm tra"];

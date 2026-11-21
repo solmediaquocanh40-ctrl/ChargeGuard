@@ -1,6 +1,10 @@
-# ChargeGuard 0.2.1
+# ChargeGuard 0.2.2
 
 Giới hạn mức sạc pin, sạc thông minh và tiết kiệm pin khi tắt màn hình cho máy jailbreak iOS 14–18 (rootless là chính, vẫn build kèm rootful và roothide). Cài xong có **cả trang trong Cài đặt lẫn app ngoài màn hình chính** — hai nơi dùng chung một kho cài đặt, chỉnh ở đâu cũng ăn.
+
+## Có gì mới ở 0.2.2
+- **Sửa lỗi trang Cài đặt không tải được** ở 0.2.1: cách gắn nhãn số cho thanh trượt bằng class con biên dịch sẵn làm cả gói Cài đặt lỗi khi nạp. 0.2.2 gắn số bằng móc runtime — không thấy class hệ thống thì tự bỏ qua, trang Cài đặt vẫn chạy với thanh trượt gốc.
+- Script cài đặt ghi kết quả đăng ký app (uicache) vào log để chẩn đoán từ xa nếu app vẫn chưa hiện icon.
 
 ## Có gì mới ở 0.2.1
 - **Sửa lỗi không hiện icon app** sau khi cài (bản 0.2.0 thiếu bước đăng ký app với hệ thống).
@@ -44,7 +48,7 @@ Giới hạn mức sạc pin, sạc thông minh và tiết kiệm pin khi tắt 
 - Đọc tên Wi-Fi và Lịch trong SpringBoard phụ thuộc quyền hệ thống cấp cho tiến trình hệ thống; không đọc được thì tính năng tương ứng nằm yên, có ghi trong log.
 
 ## Build
-Đẩy toàn bộ thư mục lên repo GitHub (giữ thư mục .github), nhớ đặt file workflow vào `.github/workflows/build.yml`. Tab Actions build 3 bản: ChargeGuard-0.2.1-rootful, -rootless, -roothide. **Mỗi lần build lại phải đẩy commit mới** — nút Re-run chỉ chạy lại workflow của commit cũ.
+Đẩy toàn bộ thư mục lên repo GitHub (giữ thư mục .github), nhớ đặt file workflow vào `.github/workflows/build.yml`. Tab Actions build 3 bản: ChargeGuard-0.2.2-rootful, -rootless, -roothide. **Mỗi lần build lại phải đẩy commit mới** — nút Re-run chỉ chạy lại workflow của commit cũ.
 
 ## Dùng
 Cài .deb bằng Sileo, respring. Vào Cài đặt > ChargeGuard hoặc mở app ChargeGuard ngoài màn hình.

@@ -47,8 +47,6 @@
 			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>90.0</real>
 			<key>defaults</key>
@@ -67,8 +65,6 @@
 			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>3.0</real>
 			<key>defaults</key>
@@ -87,8 +83,6 @@
 			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>20.0</real>
 			<key>defaults</key>
@@ -151,8 +145,6 @@
 			<string>°C</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>40.0</real>
 			<key>defaults</key>
@@ -171,8 +163,6 @@
 			<string>°C</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>45.0</real>
 			<key>defaults</key>
@@ -211,8 +201,6 @@
 			<string>°C</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>40.0</real>
 			<key>defaults</key>
@@ -279,8 +267,6 @@
 			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>40.0</real>
 			<key>defaults</key>
@@ -337,8 +323,6 @@
 			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>15.0</real>
 			<key>defaults</key>
@@ -464,8 +448,6 @@
 			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>120.0</real>
 			<key>defaults</key>
@@ -504,8 +486,6 @@
 			<string>°C</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>38.0</real>
 			<key>defaults</key>
@@ -524,8 +504,6 @@
 			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>5.0</real>
 			<key>defaults</key>
@@ -544,8 +522,6 @@
 			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>5.0</real>
 			<key>defaults</key>
@@ -682,8 +658,6 @@
 			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>55.0</real>
 			<key>defaults</key>
@@ -702,8 +676,6 @@
 			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>12.0</real>
 			<key>defaults</key>
@@ -742,8 +714,6 @@
 			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>80.0</real>
 			<key>defaults</key>
@@ -794,8 +764,6 @@
 			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>5.0</real>
 			<key>defaults</key>
@@ -826,8 +794,6 @@
 			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>5.0</real>
 			<key>defaults</key>
@@ -888,8 +854,6 @@
 			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>20.0</real>
 			<key>defaults</key>
@@ -1026,8 +990,6 @@
 			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
-			<key>cellClass</key>
-			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>15.0</real>
 			<key>defaults</key>
@@ -1207,7 +1169,7 @@
 			<key>footerText</key>
 			<string>Giới hạn sạc, sạc xung, lưu kho pin, làm mát khi sạc, tiết kiệm khi tắt màn hình. Log nằm ở Documents/ChargeGuard.log — gỡ tweak vẫn còn.</string>
 			<key>label</key>
-			<string>ChargeGuard 0.2.1</string>
+			<string>ChargeGuard 0.2.2</string>
 		</dict>
 	</array>
 	<key>title</key>

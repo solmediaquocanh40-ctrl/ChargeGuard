@@ -5,7 +5,7 @@ include $(THEOS)/makefiles/common.mk
 
 BUNDLE_NAME = ChargeGuardPrefs
 
-ChargeGuardPrefs_FILES = CGRootListController.m CGSliderCell.m
+ChargeGuardPrefs_FILES = CGRootListController.m CGSliderNumbers.m
 ChargeGuardPrefs_FRAMEWORKS = UIKit UniformTypeIdentifiers
 ChargeGuardPrefs_INSTALL_PATH = /Library/PreferenceBundles
 ChargeGuardPrefs_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-error
