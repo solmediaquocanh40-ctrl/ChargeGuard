@@ -1,6 +1,7 @@
-// ChargeGuard 0.2.0 - tweak trong SpringBoard: tiết kiệm pin khi tắt màn hình,
+// ChargeGuard 0.2.1 - tweak trong SpringBoard: tiết kiệm pin khi tắt màn hình,
 // thông báo của daemon, hồ sơ sạc theo Wi-Fi, sạc đầy theo Lịch, ghi nhận mất điện,
-// báo động rút sạc, và chỉnh kích thước icon màn hình chính.
+// báo động rút sạc, và các biện pháp làm mát phía hệ thống khi sạc nóng.
+// (Chỉnh kích thước icon đã gỡ khỏi ChargeGuard từ 0.2.1 để làm tweak riêng.)
 // Wi-Fi và push notification KHÔNG bị đụng tới. Chữ trong app KHÔNG bị đụng tới:
 // phần tiết kiệm chỉ giảm CPU/đóng băng tiến trình nền, không chạm vào hiển thị.
 #import <Foundation/Foundation.h>
@@ -73,9 +74,6 @@ int proc_pidinfo(int pid, int flavor, uint64_t arg, void *buffer, int buffersize
 + (instancetype)sharedInstance;
 - (NSArray *)runningApplications;
 @end
-@interface SBIconImageView : UIImageView
-@end
-
 // ---------- Trạng thái ----------
 static BOOL gScreenOff = NO;
 static BOOL gActive = NO;                 // đang ở chế độ tiết kiệm
@@ -96,8 +94,12 @@ static NSString *gLastCtxSSID = nil;
 static BOOL gOutagePending = NO;
 static double gOutageStart = 0;
 static BOOL gAlarmArmed = NO;
-static CGFloat gIconScale = 1.0;
-static BOOL gIconOn = NO;
+// 0.2.1: trạng thái làm mát phía SpringBoard
+static BOOL gCoolWasActive = NO;
+static BOOL gCoolDidLPM = NO;
+static BOOL gCoolDidAirplane = NO;
+static float gCoolPrevBright = -1;
+static NSMutableArray<NSNumber *> *gCoolThrottled = nil;
 
 static void CGLog(NSString *fmt, ...) {
     NSDictionary *p = [NSDictionary dictionaryWithContentsOfFile:CG_PREFS_PATH];
@@ -459,6 +461,100 @@ static void CheckWiFiContext(NSDictionary *p) {
     gLastCtxSSID = ssid;
 }
 
+// ---------- 0.2.1: Làm mát khi sạc — phần SpringBoard ----------
+// Daemon lo phần sạc chậm theo nhịp; phần này lo các yếu tố phía hệ thống:
+// giảm CPU app nền ngốn, Chế độ nguồn điện thấp, giảm độ sáng, chế độ máy bay.
+// Mọi thay đổi đều được khôi phục nguyên trạng khi pin nguội hoặc rút sạc.
+static BOOL SetAirplaneMode(BOOL on) {
+    Class c = objc_getClass("SBTelephonyManager");
+    if (!c) { CGLog(@"làm mát: không thấy SBTelephonyManager"); return NO; }
+    id mgr = nil;
+    if ([c respondsToSelector:@selector(sharedTelephonyManager)])
+        mgr = ((id (*)(id, SEL))objc_msgSend)(c, @selector(sharedTelephonyManager));
+    SEL sel = NSSelectorFromString(@"setIsInAirplaneMode:");
+    if (mgr && [mgr respondsToSelector:sel]) {
+        ((void (*)(id, SEL, BOOL))objc_msgSend)(mgr, sel, on);
+        CGLog(@"làm mát: chế độ máy bay -> %d", on);
+        return YES;
+    }
+    CGLog(@"làm mát: SBTelephonyManager không có setIsInAirplaneMode:");
+    return NO;
+}
+
+static float CurrentBrightness(void) {
+    typedef float (*GetFn)(void);
+    static GetFn getFn = NULL;
+    if (!getFn) getFn = (GetFn)dlsym(RTLD_DEFAULT, "BKSDisplayBrightnessGet");
+    return getFn ? getFn() : -1;
+}
+
+static BOOL SetBrightness(float level) {
+    typedef void (*SetFn)(float, int);
+    static SetFn setFn = NULL;
+    if (!setFn) setFn = (SetFn)dlsym(RTLD_DEFAULT, "BKSDisplayBrightnessSet");
+    if (!setFn) return NO;
+    setFn(level, 0);
+    return YES;
+}
+
+// Chỉ giảm ưu tiên CPU (không đóng băng) cho app nền ngốn CPU — an toàn khi máy đang mở.
+static void CoolThrottleApps(NSDictionary *p) {
+    NSArray *except = p[K_EXCEPT] ?: @[];
+    NSArray *apps = RunningApps();
+    NSDictionary *cpu = SampleAppCPU(apps, except);
+    if (!cpu) return; // đo không được hoặc không app nào ngốn thật: không đụng gì
+    int level = p[K_S_CPU_LEVEL] ? [p[K_S_CPU_LEVEL] intValue] : 15;
+    if (!gCoolThrottled) gCoolThrottled = [NSMutableArray array];
+    for (SBApplication *app in apps) {
+        NSString *bid; int pid;
+        if (!AppIsCandidate(app, except, &bid, &pid)) continue;
+        if ([cpu[@(pid)] doubleValue] < level) continue;
+        if (setpriority(PRIO_DARWIN_PROCESS, pid, PRIO_DARWIN_BG) == 0) {
+            [gCoolThrottled addObject:@(pid)];
+            CGLog(@"làm mát: giảm CPU %@ (%.1f%% nền)", bid, [cpu[@(pid)] doubleValue]);
+        }
+    }
+}
+
+static void HandleCooling(NSDictionary *p, NSDictionary *st) {
+    BOOL active = PB(p, K_COOL_ON, NO) && [st[S_COOL] boolValue];
+    double temp = [st[S_TEMP] doubleValue];
+    int coolTemp = p[K_COOL_TEMP] ? [p[K_COOL_TEMP] intValue] : 40;
+
+    if (active && !gCoolWasActive) {
+        CGLog(@"làm mát phía hệ thống: BẬT (pin %.1f°C)", temp);
+        if (PB(p, K_COOL_NOTIFY, YES))
+            ShowNotice(@"ChargeGuard — Làm mát", [NSString stringWithFormat:@"Pin nóng %.0f°C, đang bật các biện pháp làm mát khi sạc.", temp]);
+        if (PB(p, K_COOL_APPS, YES) && !gActive) CoolThrottleApps(p);
+        if (PB(p, K_COOL_LPM, YES) && ![[NSProcessInfo processInfo] isLowPowerModeEnabled]) {
+            SetLowPower(YES); gCoolDidLPM = YES;
+        }
+        if (PB(p, K_COOL_DIM, NO)) {
+            float cur = CurrentBrightness();
+            float lv = (p[K_COOL_DIMLV] ? [p[K_COOL_DIMLV] intValue] : 40) / 100.0f;
+            if (cur > lv && SetBrightness(lv)) {
+                gCoolPrevBright = cur;
+                CGLog(@"làm mát: giảm độ sáng %.2f -> %.2f", cur, lv);
+            }
+        }
+    }
+    // Nóng hơn nữa (ngưỡng + 3°C) mới tính tới chế độ máy bay, và chỉ khi đã bật sẵn tuỳ chọn này
+    if (active && !gCoolDidAirplane && PB(p, K_COOL_AIR, NO) && temp >= coolTemp + 3) {
+        if (SetAirplaneMode(YES)) gCoolDidAirplane = YES;
+    }
+    if (!active && gCoolWasActive) {
+        CGLog(@"làm mát phía hệ thống: TẮT, khôi phục mọi thứ");
+        if (gCoolDidLPM) { SetLowPower(NO); gCoolDidLPM = NO; }
+        if (gCoolPrevBright >= 0) { SetBrightness(gCoolPrevBright); gCoolPrevBright = -1; }
+        if (gCoolDidAirplane) { SetAirplaneMode(NO); gCoolDidAirplane = NO; }
+        for (NSNumber *pidN in gCoolThrottled) setpriority(PRIO_DARWIN_PROCESS, pidN.intValue, 0);
+        [gCoolThrottled removeAllObjects];
+        if (PB(p, K_COOL_NOTIFY, YES))
+            ShowNotice(@"ChargeGuard — Làm mát", @"Pin đã nguội, đã tắt các biện pháp làm mát.");
+    }
+    gCoolWasActive = active;
+}
+
 // ---------- Vòng kiểm tra định kỳ ----------
 static void PeriodicTick(void) {
     NSFileManager *fm = [NSFileManager defaultManager];
@@ -487,7 +583,8 @@ static void PeriodicTick(void) {
     }
 
     // 0.2.0: daemon báo không ngắt được sạc thì nói rõ cho người dùng, một lần mỗi lần khởi động
-    if ([st[S_SUPPORTED] intValue] == 0 && !gFailNotified) {
+    // 0.2.1: có công tắc riêng (notifyFail, mặc định bật)
+    if (PB(p, K_NOTIFY_FAIL, YES) && [st[S_SUPPORTED] intValue] == 0 && !gFailNotified) {
         gFailNotified = YES;
         ShowNotice(@"ChargeGuard", @"Máy này không cho phần mềm ngắt sạc, giới hạn sạc không hoạt động. Xem chi tiết trong Cài đặt > ChargeGuard.");
     }
@@ -549,52 +646,22 @@ static void PeriodicTick(void) {
 
     CheckCalendar(p);
     CheckWiFiContext(p);
-
-    // kích thước icon: nạp lại thông số
-    gIconOn = PB(p, K_ICON_ON, NO);
-    int sc = p[K_ICON_SCALE] ? [p[K_ICON_SCALE] intValue] : 100;
-    if (sc < 50) sc = 50;
-    if (sc > 130) sc = 130;
-    gIconScale = sc / 100.0;
+    HandleCooling(p, st);
 }
-
-// ---------- 0.2.0: chỉnh kích thước icon màn hình chính ----------
-// Chỉ phóng/thu hình icon; nhãn chữ dưới icon giữ nguyên, chữ trong app không liên quan.
-// Lưu ý: phóng trên 100% có thể hơi mềm hình vì iOS vẽ icon ở kích thước cố định.
-%hook SBIconImageView
-- (void)layoutSubviews {
-    %orig;
-    if (gIconOn && gIconScale > 0.01 && fabs(gIconScale - 1.0) > 0.01) {
-        if (!CGAffineTransformEqualToTransform(self.transform, CGAffineTransformMakeScale(gIconScale, gIconScale))) {
-            self.transform = CGAffineTransformMakeScale(gIconScale, gIconScale);
-        }
-    } else if (!CGAffineTransformEqualToTransform(self.transform, CGAffineTransformIdentity)) {
-        self.transform = CGAffineTransformIdentity;
-    }
-}
-%end
 
 %ctor {
     @autoreleasepool {
         if (![[NSBundle mainBundle].bundleIdentifier isEqualToString:@"com.apple.springboard"]) return;
-        CGLog(@"tweak 0.2.0 nạp vào SpringBoard (SBIconImageView: %@)", objc_getClass("SBIconImageView") ? @"có" : @"KHÔNG THẤY");
+        CGLog(@"tweak 0.2.1 nạp vào SpringBoard");
         RecoverFromCrash();
 
-        int tok1, tok2, tok3;
+        int tok1, tok2;
         notify_register_dispatch("com.apple.springboard.hasBlankedScreen", &tok1, dispatch_get_main_queue(), ^(int t) {
             uint64_t state = 0; notify_get_state(t, &state);
             ScreenChanged(state != 0);
         });
         notify_register_dispatch("com.chargeguard/restore", &tok2, dispatch_get_main_queue(), ^(int t) {
             RestoreAll(@"thông báo từ Cài đặt");
-        });
-        notify_register_dispatch(CG_PREFS_NOTIFY, &tok3, dispatch_get_main_queue(), ^(int t) {
-            NSDictionary *p = Prefs();
-            gIconOn = PB(p, K_ICON_ON, NO);
-            int sc = p[K_ICON_SCALE] ? [p[K_ICON_SCALE] intValue] : 100;
-            if (sc < 50) sc = 50;
-            if (sc > 130) sc = 130;
-            gIconScale = sc / 100.0;
         });
 
         dispatch_source_t tick = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());

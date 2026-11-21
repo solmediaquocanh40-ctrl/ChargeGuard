@@ -34,4 +34,23 @@ chown root:wheel "$PLIST" 2>/dev/null
 chmod 644 "$PLIST"
 launchctl unload "$PLIST" 2>/dev/null
 launchctl load -w "$PLIST" 2>/dev/null || launchctl bootstrap system "$PLIST" 2>/dev/null
+
+# 0.2.1: đăng ký app ChargeGuard ngoài màn hình chính. Bản 0.2.0 thiếu bước này
+# nên cài xong không thấy icon app (hệ thống chưa hề được nhờ đăng ký app).
+APP=""
+for c in /var/jb/Applications/ChargeGuard.app /Applications/ChargeGuard.app; do
+    if [ -d "$c" ]; then APP="$c"; break; fi
+done
+if [ -z "$APP" ] && command -v jbroot >/dev/null 2>&1; then
+    c="$(jbroot /Applications/ChargeGuard.app)"
+    [ -d "$c" ] && APP="$c"
+fi
+UICACHE=""
+for c in /var/jb/usr/bin/uicache /usr/bin/uicache; do
+    if [ -x "$c" ]; then UICACHE="$c"; break; fi
+done
+if [ -z "$UICACHE" ] && command -v uicache >/dev/null 2>&1; then UICACHE="uicache"; fi
+if [ -n "$APP" ] && [ -n "$UICACHE" ]; then
+    "$UICACHE" -p "$APP" 2>/dev/null || "$UICACHE" -a 2>/dev/null || true
+fi
 exit 0

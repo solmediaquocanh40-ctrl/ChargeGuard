@@ -43,8 +43,12 @@
 			<string>Bật giới hạn sạc</string>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>90.0</real>
 			<key>defaults</key>
@@ -59,8 +63,12 @@
 			<real>10.0</real>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>3.0</real>
 			<key>defaults</key>
@@ -73,6 +81,26 @@
 			<real>10.0</real>
 			<key>min</key>
 			<real>1.0</real>
+		</dict>
+		<dict>
+			<key>CGUnit</key>
+			<string>%</string>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
+			<key>default</key>
+			<real>20.0</real>
+			<key>defaults</key>
+			<string>com.chargeguard.prefs</string>
+			<key>key</key>
+			<string>floorLevel</string>
+			<key>label</key>
+			<string>Mức an toàn tối thiểu (%)</string>
+			<key>max</key>
+			<real>30.0</real>
+			<key>min</key>
+			<real>5.0</real>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -119,8 +147,12 @@
 			<string>Ngừng sạc khi nóng</string>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string>°C</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>40.0</real>
 			<key>defaults</key>
@@ -135,8 +167,12 @@
 			<real>35.0</real>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string>°C</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>45.0</real>
 			<key>defaults</key>
@@ -153,6 +189,138 @@
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>Pin nóng tới ngưỡng khi đang sạc thì máy tự làm mát: sạc chậm lại theo nhịp, giảm tải app nền ngốn CPU, bật Chế độ nguồn điện thấp, có thể giảm độ sáng. Mọi thay đổi phía hệ thống đều được khôi phục nguyên trạng khi pin nguội hoặc rút sạc.</string>
+			<key>label</key>
+			<string>Làm mát khi sạc</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.chargeguard.prefs</string>
+			<key>key</key>
+			<string>coolEnabled</string>
+			<key>label</key>
+			<string>Bật làm mát khi sạc</string>
+		</dict>
+		<dict>
+			<key>CGUnit</key>
+			<string>°C</string>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
+			<key>default</key>
+			<real>40.0</real>
+			<key>defaults</key>
+			<string>com.chargeguard.prefs</string>
+			<key>key</key>
+			<string>coolTemp</string>
+			<key>label</key>
+			<string>Nóng từ (°C) thì làm mát</string>
+			<key>max</key>
+			<real>45.0</real>
+			<key>min</key>
+			<real>35.0</real>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.chargeguard.prefs</string>
+			<key>key</key>
+			<string>coolSlowCharge</string>
+			<key>label</key>
+			<string>Sạc chậm theo nhịp khi nóng</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.chargeguard.prefs</string>
+			<key>key</key>
+			<string>coolApps</string>
+			<key>label</key>
+			<string>Giảm CPU app nền ngốn khi nóng</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.chargeguard.prefs</string>
+			<key>key</key>
+			<string>coolLPM</string>
+			<key>label</key>
+			<string>Bật Chế độ nguồn điện thấp khi nóng</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.chargeguard.prefs</string>
+			<key>key</key>
+			<string>coolDimScreen</string>
+			<key>label</key>
+			<string>Giảm độ sáng màn hình khi nóng</string>
+		</dict>
+		<dict>
+			<key>CGUnit</key>
+			<string>%</string>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
+			<key>default</key>
+			<real>40.0</real>
+			<key>defaults</key>
+			<string>com.chargeguard.prefs</string>
+			<key>key</key>
+			<string>coolDimLevel</string>
+			<key>label</key>
+			<string>Mức sáng tối đa (%)</string>
+			<key>max</key>
+			<real>80.0</real>
+			<key>min</key>
+			<real>10.0</real>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.chargeguard.prefs</string>
+			<key>key</key>
+			<string>coolAirplane</string>
+			<key>label</key>
+			<string>Nóng hơn ngưỡng 3°C: bật chế độ máy bay (thử nghiệm)</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.chargeguard.prefs</string>
+			<key>key</key>
+			<string>coolNotify</string>
+			<key>label</key>
+			<string>Thông báo khi làm mát bắt đầu / kết thúc</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
 			<key>label</key>
 			<string>Sạc đầy một lần và cấp tốc</string>
 		</dict>
@@ -165,8 +333,12 @@
 			<string>Sạc đầy 100% một lần</string>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>15.0</real>
 			<key>defaults</key>
@@ -288,8 +460,12 @@
 			<string>Sạc đầy theo sự kiện trong Lịch</string>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>120.0</real>
 			<key>defaults</key>
@@ -324,8 +500,12 @@
 			<string>Bật sạc xung</string>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string>°C</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>38.0</real>
 			<key>defaults</key>
@@ -340,8 +520,12 @@
 			<real>36.0</real>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>5.0</real>
 			<key>defaults</key>
@@ -356,8 +540,12 @@
 			<real>1.0</real>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>5.0</real>
 			<key>defaults</key>
@@ -490,8 +678,12 @@
 			<string>Bật chế độ lưu kho</string>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>55.0</real>
 			<key>defaults</key>
@@ -506,8 +698,12 @@
 			<real>40.0</real>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>12.0</real>
 			<key>defaults</key>
@@ -542,8 +738,12 @@
 			<string>Tên Wi-Fi nhà</string>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>80.0</real>
 			<key>defaults</key>
@@ -590,8 +790,12 @@
 			<string>Cảnh báo cáp/củ sạc chập chờn</string>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>5.0</real>
 			<key>defaults</key>
@@ -618,8 +822,12 @@
 			<string>Ghi nhận mất điện</string>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string></string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>5.0</real>
 			<key>defaults</key>
@@ -676,8 +884,12 @@
 			<string>Cảnh báo pin yếu</string>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>20.0</real>
 			<key>defaults</key>
@@ -690,6 +902,18 @@
 			<real>30.0</real>
 			<key>min</key>
 			<real>10.0</real>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.chargeguard.prefs</string>
+			<key>key</key>
+			<string>notifyFail</string>
+			<key>label</key>
+			<string>Báo khi máy không cho ngắt sạc</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -798,8 +1022,12 @@
 			<string>Giảm CPU app nền</string>
 		</dict>
 		<dict>
+			<key>CGUnit</key>
+			<string>%</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>CGSliderCell</string>
 			<key>default</key>
 			<real>15.0</real>
 			<key>defaults</key>
@@ -902,42 +1130,6 @@
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
-			<key>footerText</key>
-			<string>Phóng/thu hình icon ngoài màn hình chính. Nhãn chữ dưới icon giữ nguyên nét, chữ trong app không liên quan. Lưu ý: phóng trên 100% hình icon có thể hơi mềm vì iOS vẽ icon ở kích thước cố định.</string>
-			<key>label</key>
-			<string>Tiện ích thêm — kích thước icon</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<false/>
-			<key>defaults</key>
-			<string>com.chargeguard.prefs</string>
-			<key>key</key>
-			<string>iconOn</string>
-			<key>label</key>
-			<string>Bật chỉnh kích thước icon</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>default</key>
-			<real>100.0</real>
-			<key>defaults</key>
-			<string>com.chargeguard.prefs</string>
-			<key>key</key>
-			<string>iconScale</string>
-			<key>label</key>
-			<string>Kích thước icon (%)</string>
-			<key>max</key>
-			<real>130.0</real>
-			<key>min</key>
-			<real>50.0</real>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
 			<key>label</key>
 			<string>Công cụ</string>
 		</dict>
@@ -1013,9 +1205,9 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>Giới hạn sạc, sạc xung, lưu kho pin, tiết kiệm khi tắt màn hình. Log nằm ở Documents/ChargeGuard.log — gỡ tweak vẫn còn.</string>
+			<string>Giới hạn sạc, sạc xung, lưu kho pin, làm mát khi sạc, tiết kiệm khi tắt màn hình. Log nằm ở Documents/ChargeGuard.log — gỡ tweak vẫn còn.</string>
 			<key>label</key>
-			<string>ChargeGuard 0.2.0</string>
+			<string>ChargeGuard 0.2.1</string>
 		</dict>
 	</array>
 	<key>title</key>

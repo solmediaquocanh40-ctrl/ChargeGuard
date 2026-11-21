@@ -31,7 +31,9 @@ static NSArray *CGKnownKeys(void) {
              K_OUTAGE_ON, K_OUTAGE_MIN, K_ALARM_ON, K_NATIVE_OK, K_HOME_WIFI, K_HOME_LIMIT, K_AWAY_FULL,
              K_SAVE_ON, K_SAVE_DELAY, K_SAVE_CHARGING, K_PROFILE, K_S_CPU, K_S_CPU_LEVEL, K_S_FREEZE,
              K_S_BT, K_S_LOC, K_S_AIRDROP, K_S_LPM, K_EXCEPT, @"exceptText",
-             K_ICON_ON, K_ICON_SCALE];
+             K_FLOOR, K_NOTIFY_FAIL,
+             K_COOL_ON, K_COOL_TEMP, K_COOL_SLOW, K_COOL_APPS, K_COOL_LPM,
+             K_COOL_DIM, K_COOL_DIMLV, K_COOL_AIR, K_COOL_NOTIFY];
 }
 
 #pragma mark - Table

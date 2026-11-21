@@ -1,4 +1,4 @@
-// CGRootListController 0.2.0 — trang Cài đặt của ChargeGuard.
+// CGRootListController 0.2.1 — trang Cài đặt của ChargeGuard.
 // Giữ nguyên khung của bản cũ (trạng thái, hồ sơ, ngoại lệ, các nút công cụ)
 // và thêm: sạc cấp tốc, respring, đặt lại mặc định, xuất/nhập file cài đặt,
 // chẩn đoán đầy đủ (model máy, bản iOS, phương thức ngắt sạc) trong phần chép log.
@@ -22,6 +22,13 @@ extern char **environ;
 - (NSArray *)specifiers {
     if (!_specifiers) {
         _specifiers = [self loadSpecifiersFromPlistName:@"Root" target:self];
+        // 0.2.1: mọi thanh trượt dùng ô CGSliderCell để hiện số khi kéo
+        // (đặt cả trong Root.plist lẫn ở đây cho chắc chắn).
+        for (PSSpecifier *spec in _specifiers) {
+            if ([[spec propertyForKey:@"cell"] isEqualToString:@"PSSliderCell"]) {
+                [spec setProperty:@"CGSliderCell" forKey:@"cellClass"];
+            }
+        }
     }
     return _specifiers;
 }
@@ -146,7 +153,9 @@ static NSArray *KnownKeys(void) {
              K_OUTAGE_ON, K_OUTAGE_MIN, K_ALARM_ON, K_NATIVE_OK, K_HOME_WIFI, K_HOME_LIMIT, K_AWAY_FULL,
              K_SAVE_ON, K_SAVE_DELAY, K_SAVE_CHARGING, K_PROFILE, K_S_CPU, K_S_CPU_LEVEL, K_S_FREEZE,
              K_S_BT, K_S_LOC, K_S_AIRDROP, K_S_LPM, K_EXCEPT, @"exceptText",
-             K_ICON_ON, K_ICON_SCALE];
+             K_FLOOR, K_NOTIFY_FAIL,
+             K_COOL_ON, K_COOL_TEMP, K_COOL_SLOW, K_COOL_APPS, K_COOL_LPM,
+             K_COOL_DIM, K_COOL_DIMLV, K_COOL_AIR, K_COOL_NOTIFY];
 }
 
 - (void)resetDefaults {
@@ -172,7 +181,7 @@ static NSArray *KnownKeys(void) {
     NSMutableDictionary *out = [NSMutableDictionary dictionary];
     for (NSString *k in KnownKeys()) if (cur[k]) out[k] = cur[k];
     out[@"_chargeguard"] = @"settings";
-    out[@"_version"] = @"0.2.0";
+    out[@"_version"] = @"0.2.1";
     NSError *err = nil;
     NSData *data = [NSJSONSerialization dataWithJSONObject:out options:NSJSONWritingPrettyPrinted error:&err];
     if (!data) { [self alert:@"Xuất cài đặt" message:@"Không tạo được file."]; return; }
@@ -222,7 +231,7 @@ static NSArray *KnownKeys(void) {
     struct utsname uts; uname(&uts);
     NSDictionary *s = [NSDictionary dictionaryWithContentsOfFile:CG_STATUS_PATH];
     NSString *diag = [NSString stringWithFormat:
-        @"Máy: %s • iOS %@ • ChargeGuard 0.2.0\nNgắt sạc: %@\n",
+        @"Máy: %s • iOS %@ • ChargeGuard 0.2.1\nNgắt sạc: %@\n",
         uts.machine, [UIDevice currentDevice].systemVersion,
         [s[S_SUPPORTED] intValue] == 1 ? [NSString stringWithFormat:@"hoạt động (%@)", s[S_METHOD]]
         : [s[S_SUPPORTED] intValue] == 0 ? @"KHÔNG hỗ trợ" : @"chưa kiểm tra"];

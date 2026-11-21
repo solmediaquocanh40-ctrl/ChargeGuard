@@ -1,4 +1,4 @@
-// chargeguardd 0.2.0 - daemon chạy bằng quyền root, đọc pin và ngắt/mở sạc theo giới hạn.
+// chargeguardd 0.2.1 - daemon chạy bằng quyền root, đọc pin và ngắt/mở sạc theo giới hạn.
 // Mặc định luôn là SẠC BÌNH THƯỜNG. Chỉ ngắt sạc khi đã kiểm chứng được một cách ngắt hoạt động.
 // 0.2.0: nhớ phương thức ngắt đã thắng, sạc xung, chế độ lưu kho, vệ sĩ nhiệt khẩn cấp,
 // cảnh báo cáp chập chờn, phát hiện pin bất thường, lịch sử sạc, log bền ở Documents.
@@ -159,6 +159,8 @@ static BOOL gHolding = NO;
 static NSString *gMsg = @"Đang chạy.";
 static double gHeldAt = 0;
 static BOOL gPulseRest = NO;       // đang ở nhịp nghỉ của sạc xung
+static BOOL gCoolActive = NO;      // 0.2.1: đang làm mát khi sạc (pin nóng >= ngưỡng)
+static BOOL gCoolHold = NO;        // 0.2.1: nhịp giữ hiện tại là do làm mát
 static BOOL gStorageMode = NO;
 static BOOL gBoost = NO;
 static BOOL gEmerg = NO;
@@ -178,6 +180,7 @@ static void WriteStatus(BatInfo b) {
     s[S_TIME] = @([[NSDate date] timeIntervalSince1970]);
     s[@"heldAt"] = @(gHeldAt);
     s[S_PULSE] = @(gPulseRest);
+    s[S_COOL] = @(gCoolActive);
     s[S_STORAGE] = @(gStorageMode);
     s[S_BOOST] = @(gBoost);
     s[S_EMERG] = @(gEmerg);
@@ -377,9 +380,13 @@ static void Tick(void) {
     }
 
     // --- Quyết định giữ sạc ---
-    gEmerg = tempOn && b.tempC >= tempEmerg && b.percent > 20;
-    BOOL allow = !enabled || effLimit >= 100 || fullIntent || b.percent <= 20 || !b.external || nativeYield;
-    BOOL tempHot = tempOn && b.tempC >= tempMax && b.percent > 20 && enabled && !fullIntent;
+    // 0.2.1: mức an toàn tối thiểu cho người dùng chọn (0.2.0 là hằng số 20)
+    int floorLvl = p[K_FLOOR] ? [p[K_FLOOR] intValue] : 20;
+    if (floorLvl < 5) floorLvl = 5;
+    if (floorLvl > 30) floorLvl = 30;
+    gEmerg = tempOn && b.tempC >= tempEmerg && b.percent > floorLvl;
+    BOOL allow = !enabled || effLimit >= 100 || fullIntent || b.percent <= floorLvl || !b.external || nativeYield;
+    BOOL tempHot = tempOn && b.tempC >= tempMax && b.percent > floorLvl && enabled && !fullIntent;
 
     BOOL wantHold;
     if (gEmerg) wantHold = enabled && b.external;
@@ -390,7 +397,7 @@ static void Tick(void) {
 
     // --- Sạc xung: khi đang sạc lên mà nóng, hoặc trong khung giờ đêm ---
     BOOL pulseActive = NO;
-    if ([p[K_PULSE_ON] boolValue] && enabled && b.external && !fullIntent && !gStorageMode && !nativeYield && !gEmerg && b.percent < effLimit && b.percent > 20) {
+    if ([p[K_PULSE_ON] boolValue] && enabled && b.external && !fullIntent && !gStorageMode && !nativeYield && !gEmerg && b.percent < effLimit && b.percent > floorLvl) {
         if ((tempOn && b.tempC >= (p[K_PULSE_TEMP] ? [p[K_PULSE_TEMP] intValue] : 38)) ||
             ([p[K_PULSE_NIGHT_ON] boolValue] && InNightWindow(p))) {
             pulseActive = YES;
@@ -410,10 +417,31 @@ static void Tick(void) {
         pulsePhaseStart = 0; pulsePhaseRest = NO; gPulseRest = NO;
     }
 
+    // --- 0.2.1: Làm mát khi sạc (phần daemon: sạc chậm theo nhịp) ---
+    // Pin nóng tới ngưỡng thì chuyển sang nhịp giữ 3 nhịp / nhả 1 nhịp: dòng sạc
+    // trung bình giảm mạnh nên máy nguội dần mà vẫn lên pin. Phần giảm tải app,
+    // nguồn điện thấp, độ sáng... do phía SpringBoard lo theo cờ S_COOL.
+    int coolTemp = p[K_COOL_TEMP] ? [p[K_COOL_TEMP] intValue] : 40;
+    BOOL coolNow = [p[K_COOL_ON] boolValue] && enabled && b.external && b.tempC >= coolTemp && b.percent > floorLvl;
+    if (coolNow && !gCoolActive) CGLog(@"LÀM MÁT: bắt đầu (pin %.1f°C, ngưỡng %d°C)", b.tempC, coolTemp);
+    if (!coolNow && gCoolActive) CGLog(@"LÀM MÁT: kết thúc (pin %.1f°C)", b.tempC);
+    gCoolActive = coolNow;
+    gCoolHold = NO;
+    static int coolPhase = 0;
+    if (gCoolActive && [p[K_COOL_SLOW] boolValue] && !fullIntent && !gEmerg && b.percent < 100) {
+        coolPhase = (coolPhase + 1) % 4;
+        wantHold = (coolPhase != 3);
+        gCoolHold = wantHold;
+        gPulseRest = NO; // làm mát ưu tiên hơn sạc xung
+    } else {
+        coolPhase = 0;
+    }
+
     if (wantHold && !gHolding) {
         if (TryInhibit()) {
             gHolding = YES; gHeldAt = now;
             gMsg = gEmerg ? [NSString stringWithFormat:@"VỆ SĨ NHIỆT: đã ngắt sạc ở %.1f°C.", b.tempC]
+                 : gCoolHold ? @"Đang làm mát: sạc chậm theo nhịp cho pin nguội."
                  : gPulseRest ? @"Sạc xung: đang nghỉ cho mát pin."
                  : tempHot ? [NSString stringWithFormat:@"Tạm ngừng sạc vì nóng (%.1f°C).", b.tempC]
                  : gStorageMode ? [NSString stringWithFormat:@"Đang giữ ở chế độ lưu kho %d%%.", b.percent]
@@ -423,7 +451,7 @@ static void Tick(void) {
     } else if (wantHold && gHolding) {
         TryInhibit(); // lệnh nhắc lại phòng khi hệ thống đặt lại
         // kiểm chứng lại phương thức đã nhớ: nếu máy lại sạc vượt mức thì dò lại từ đầu
-        if (b.charging && b.amps > 200 && b.percent > effLimit + 2 && !gPulseRest) {
+        if (b.charging && b.amps > 200 && b.percent > effLimit + 2 && !gPulseRest && !gCoolHold) {
             CGLog(@"phương thức %@ không còn tác dụng, dò lại", MethodName(gWorking));
             gWorking = -1; gAllFailed = NO;
             gState[@"working"] = @(-1); gState[@"allFailed"] = @NO; SaveState();
@@ -451,7 +479,7 @@ int main(int argc, char **argv) {
         LoadState();
         if (gState[@"working"]) gWorking = [gState[@"working"] intValue];
         gAllFailed = [gState[@"allFailed"] boolValue];
-        CGLog(@"chargeguardd 0.2.0 khởi động (phương thức đã nhớ: %@)", gWorking >= 0 ? MethodName(gWorking) : @"chưa có");
+        CGLog(@"chargeguardd 0.2.1 khởi động (phương thức đã nhớ: %@)", gWorking >= 0 ? MethodName(gWorking) : @"chưa có");
         ReleaseAllMethods();              // luôn bắt đầu ở trạng thái sạc bình thường
         // Dọn khi bị tắt
         signal(SIGTERM, SIG_IGN);

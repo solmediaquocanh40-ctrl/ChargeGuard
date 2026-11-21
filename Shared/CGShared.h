@@ -1,4 +1,4 @@
-// CGShared.h - hằng số dùng chung cho daemon, tweak, bảng Cài đặt và app (0.2.0)
+// CGShared.h - hằng số dùng chung cho daemon, tweak, bảng Cài đặt và app (0.2.1)
 #ifndef CGSHARED_H
 #define CGSHARED_H
 
@@ -28,7 +28,7 @@
 #define K_HYST           @"hysteresis"       // int, sạc lại khi thấp hơn giới hạn bấy nhiêu %
 #define K_TEMP_ON        @"tempOn"           // BOOL
 #define K_TEMP_MAX       @"tempMax"          // int, độ C
-#define K_TEMP_EMERG     @"tempEmerg"        // int, độ C: vệ sĩ nhiệt khẩn cấp (0.2.0)
+#define K_TEMP_EMERG     @"tempEmerg"        // int, độ C: vệ sĩ nhiệt khẩn cấp (0.2.1)
 #define K_FULL_ONCE      @"fullOnceStamp"    // double, mốc thời gian lúc bấm "Sạc đầy một lần"
 #define K_SCHED_ON       @"schedOn"          // BOOL
 #define K_SCHED_HOUR     @"schedHour"        // int 0-23, giờ cho sạc đầy
@@ -75,7 +75,7 @@
 #define K_SAVE_CHARGING  @"saveWhileCharging"// BOOL, vẫn tiết kiệm khi đang sạc
 #define K_PROFILE        @"profile"          // 0 tùy chỉnh, 1 nhẹ, 2 cân bằng, 3 mạnh
 #define K_S_CPU          @"sCPU"             // giảm CPU nền
-#define K_S_CPU_LEVEL    @"sCPULevel"        // int % CPU nền: app ngốn hơn mức này mới bị đóng băng (0.2.0)
+#define K_S_CPU_LEVEL    @"sCPULevel"        // int % CPU nền: app ngốn hơn mức này mới bị đóng băng (0.2.1)
 #define K_S_FREEZE       @"sFreeze"          // đóng băng app nền (0.2.0: chỉ app ngốn CPU nếu bật sCPU)
 #define K_S_BT           @"sBluetooth"
 #define K_S_LOC          @"sLocation"
@@ -85,9 +85,22 @@
 // Hai khoá sBGRefresh / sRaiseToWake của 0.1.0 bị loại hẳn: không có cơ chế
 // hệ thống đáng tin để tweak đọc/ghi chúng, để lại chỉ tổ gây hiểu lầm.
 
-// ---- Khóa cài đặt 0.2.0: tiện ích thêm ----
-#define K_ICON_ON        @"iconOn"           // BOOL, bật chỉnh kích thước icon màn hình chính
-#define K_ICON_SCALE     @"iconScale"        // int 50-130 (%), kích thước icon
+// ---- Khóa cài đặt 0.2.1 ----
+// Chỉnh kích thước icon ĐÃ GỠ khỏi ChargeGuard theo yêu cầu của anh Quoc
+// (sẽ làm thành tweak riêng); hai khoá iconOn/iconScale cũ không còn ai đọc.
+#define K_FLOOR          @"floorLevel"       // int 5-30 %: mức an toàn tối thiểu, dưới mức này không bao giờ giữ sạc (0.2.0 là hằng số 20 trong daemon, 0.2.1 cho chọn)
+#define K_NOTIFY_FAIL    @"notifyFail"       // BOOL, báo khi máy không cho ngắt sạc
+
+// ---- Khóa cài đặt 0.2.1: làm mát khi sạc ----
+#define K_COOL_ON        @"coolEnabled"      // BOOL, công tắc tổng làm mát khi sạc
+#define K_COOL_TEMP      @"coolTemp"         // int °C, nóng từ mức này thì làm mát
+#define K_COOL_SLOW      @"coolSlowCharge"   // BOOL, sạc chậm theo nhịp 3-1 khi nóng (daemon)
+#define K_COOL_APPS      @"coolApps"         // BOOL, giảm CPU app nền ngốn khi nóng (tweak)
+#define K_COOL_LPM       @"coolLPM"          // BOOL, bật Chế độ nguồn điện thấp khi nóng (tweak)
+#define K_COOL_DIM       @"coolDimScreen"    // BOOL, giảm độ sáng màn hình khi nóng (tweak)
+#define K_COOL_DIMLV     @"coolDimLevel"     // int %, mức sáng tối đa khi làm mát
+#define K_COOL_AIR       @"coolAirplane"     // BOOL, nóng hơn ngưỡng +3°C thì bật chế độ máy bay (tweak, thử nghiệm)
+#define K_COOL_NOTIFY    @"coolNotify"       // BOOL, thông báo khi làm mát bắt đầu/kết thúc
 
 // ---- Khóa thống kê (app ghi) ----
 #define K_STAT_CYCLES0   @"statCyclesBase"   // int chu kỳ tại lần mở app đầu tiên của tháng
@@ -113,5 +126,6 @@
 #define S_NATIVE         @"nativeLimit"      // 0.2.0: máy có vẻ đã bật giới hạn sạc gốc của Apple
 #define S_CABLEWARN      @"cableWarn"        // 0.2.0: số lần chập chờn trong 10 phút gần nhất
 #define S_ANOMALY        @"anomaly"          // 0.2.0: dấu hiệu pin bất thường (chuỗi, rỗng = không có)
+#define S_COOL           @"cooling"          // 0.2.1: đang ở trạng thái làm mát khi sạc (pin nóng >= ngưỡng)
 
 #endif

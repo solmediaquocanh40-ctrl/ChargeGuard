@@ -1,6 +1,13 @@
-# ChargeGuard 0.2.0
+# ChargeGuard 0.2.1
 
 Giới hạn mức sạc pin, sạc thông minh và tiết kiệm pin khi tắt màn hình cho máy jailbreak iOS 14–18 (rootless là chính, vẫn build kèm rootful và roothide). Cài xong có **cả trang trong Cài đặt lẫn app ngoài màn hình chính** — hai nơi dùng chung một kho cài đặt, chỉnh ở đâu cũng ăn.
+
+## Có gì mới ở 0.2.1
+- **Sửa lỗi không hiện icon app** sau khi cài (bản 0.2.0 thiếu bước đăng ký app với hệ thống).
+- **Mọi thanh trượt trong Cài đặt hiện số** ở mép phải, kéo tới đâu số chạy tới đó.
+- **Mới: Làm mát khi sạc** — pin nóng tới ngưỡng bạn chọn thì máy tự làm mát: sạc chậm theo nhịp 3–1, giảm CPU app nền ngốn, bật Chế độ nguồn điện thấp, tuỳ chọn giảm độ sáng và (thử nghiệm) chế độ máy bay khi nóng hơn nữa. Pin nguội hoặc rút sạc là mọi thứ khôi phục nguyên trạng.
+- **Mức an toàn tối thiểu** giờ cho chọn 5–30% (trước đây cố định 20%), thêm công tắc riêng cho thông báo "máy không cho ngắt sạc".
+- **Gỡ chỉnh kích thước icon** khỏi ChargeGuard — tính năng này sẽ thành một tweak riêng.
 
 ## ChargeGuard làm được gì
 
@@ -28,7 +35,7 @@ Giới hạn mức sạc pin, sạc thông minh và tiết kiệm pin khi tắt 
 
 **Trang trong Cài đặt** — đầy đủ mọi công tắc và thông số (tất cả đều gắn số chọn được: mức %, nhiệt °C, phút/giờ, số lần), dòng trạng thái chẩn đoán, nút respring, đặt lại mặc định, xuất/nhập cài đặt, chép log kèm chẩn đoán (model máy, bản iOS, phương thức ngắt sạc).
 
-**Tiện ích thêm:** chỉnh kích thước icon màn hình chính 50–130%. Chỉ phóng/thu hình icon, nhãn chữ giữ nguyên. Lưu ý: phóng trên 100% hình icon có thể hơi mềm vì iOS vẽ icon ở kích thước cố định.
+**Làm mát khi sạc (0.2.1):** một công tắc tổng + ngưỡng °C tự chọn. Daemon lo sạc chậm theo nhịp; phía SpringBoard lo giảm CPU app nền, nguồn điện thấp, độ sáng và chế độ máy bay. Mọi thay đổi đều tự khôi phục khi pin nguội.
 
 ## Giới hạn thật (nói trước cho rõ)
 - Ngắt sạc được hay không phụ thuộc vào máy: daemon tự dò và tự kiểm chứng, không chạy được thì báo rõ chứ không giả vờ.
@@ -37,7 +44,7 @@ Giới hạn mức sạc pin, sạc thông minh và tiết kiệm pin khi tắt 
 - Đọc tên Wi-Fi và Lịch trong SpringBoard phụ thuộc quyền hệ thống cấp cho tiến trình hệ thống; không đọc được thì tính năng tương ứng nằm yên, có ghi trong log.
 
 ## Build
-Đẩy toàn bộ thư mục lên repo GitHub (giữ thư mục .github), nhớ đặt file workflow vào `.github/workflows/build.yml`. Tab Actions build 3 bản: ChargeGuard-0.2.0-rootful, -rootless, -roothide. **Mỗi lần build lại phải đẩy commit mới** — nút Re-run chỉ chạy lại workflow của commit cũ.
+Đẩy toàn bộ thư mục lên repo GitHub (giữ thư mục .github), nhớ đặt file workflow vào `.github/workflows/build.yml`. Tab Actions build 3 bản: ChargeGuard-0.2.1-rootful, -rootless, -roothide. **Mỗi lần build lại phải đẩy commit mới** — nút Re-run chỉ chạy lại workflow của commit cũ.
 
 ## Dùng
 Cài .deb bằng Sileo, respring. Vào Cài đặt > ChargeGuard hoặc mở app ChargeGuard ngoài màn hình.

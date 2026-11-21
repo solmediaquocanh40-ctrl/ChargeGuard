@@ -82,7 +82,7 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tv { return 3; }
 - (NSInteger)tableView:(UITableView *)tv numberOfRowsInSection:(NSInteger)sec {
-    if (sec == 0) return 7;
+    if (sec == 0) return 8;
     if (sec == 1) return 5;
     NSArray *o = [self outages];
     return o.count ? (NSInteger)o.count : 1;
@@ -139,6 +139,10 @@
             case 6:
                 cell.textLabel.text = @"Tổng giờ đã giữ ở giới hạn";
                 cell.detailTextLabel.text = [NSString stringWithFormat:@"%.1f giờ", [self heldHours]];
+                break;
+            case 7:
+                cell.textLabel.text = @"Làm mát khi sạc";
+                cell.detailTextLabel.text = !CGB(p, K_COOL_ON, NO) ? @"Đang tắt" : [s[S_COOL] boolValue] ? @"Đang làm mát" : @"Đang bật, chờ nóng";
                 break;
         }
         return cell;
